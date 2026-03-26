@@ -13,10 +13,24 @@ function AdminDashboard() {
   const loadProducts = () => {
     API.get("/products")
       .then((res) => {
-        setProducts(res.data);
+        console.log("API RESPONSE:", res.data);
+
+        // ✅ Safe handling for all backend formats
+        const data = res.data;
+
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else if (Array.isArray(data.products)) {
+          setProducts(data.products);
+        } else if (Array.isArray(data.data)) {
+          setProducts(data.data);
+        } else {
+          setProducts([]); // fallback
+        }
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Error loading products:", err);
+        setProducts([]); // prevent crash
       });
   };
 
@@ -40,6 +54,7 @@ function AdminDashboard() {
         Add Product
       </button>
 
+      {/* ✅ Table */}
       <table className="table table-bordered">
         <thead>
           <tr>
@@ -54,36 +69,50 @@ function AdminDashboard() {
         </thead>
 
         <tbody>
-          {products.map((p) => (
-            <tr key={p.id}>
-              <td>{p.id}</td>
-              <td>{p.name}</td>
-              <td>{p.price}</td>
-              <td>{p.quantity}</td>
+          {/* ✅ Safe rendering */}
+          {Array.isArray(products) && products.length > 0 ? (
+            products.map((p) => (
+              <tr key={p.id}>
+                <td>{p.id}</td>
+                <td>{p.name}</td>
+                <td>{p.price}</td>
+                <td>{p.quantity}</td>
 
-              <td>
-                <img src={p.imageUrl} width="80" />
-              </td>
+                <td>
+                  <img
+                    src={p.imageUrl}
+                    width="80"
+                    alt={p.name}
+                    style={{ objectFit: "cover" }}
+                  />
+                </td>
 
-              <td>
-                <button
-                  className="btn btn-warning"
-                  onClick={() => navigate(`/update-product/${p.id}`)}
-                >
-                  Update
-                </button>
-              </td>
+                <td>
+                  <button
+                    className="btn btn-warning"
+                    onClick={() => navigate(`/update-product/${p.id}`)}
+                  >
+                    Update
+                  </button>
+                </td>
 
-              <td>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => navigate(`/delete-product/${p.id}`)}
-                >
-                  Delete
-                </button>
+                <td>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => navigate(`/delete-product/${p.id}`)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" className="text-center">
+                No products available
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
@@ -91,4 +120,3 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
-
